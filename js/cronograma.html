@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cronograma de Tarefas - StudyFlow</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header__main-info">
+            <h1 class="header__title">⚡ StudyFlow</h1>
+            <div id="user-streak" class="streak-badge" title="Dias seguidos de tarefas concluídas">🔥 0 dias</div>
+        </div>
+        <button id="theme-toggle" class="header__toggle">🌓 Alternar Tema</button>
+    </header>
+
+    <nav class="app-nav" aria-label="Navegacao principal">
+        <a href="../index.html" class="app-nav__link">
+            <span class="app-nav__icon">▦</span>
+            <span class="app-nav__label">Dashboard</span>
+        </a>
+        <a href="../index.html#tasks-section" class="app-nav__link">
+            <span class="app-nav__icon">✓</span>
+            <span class="app-nav__label">Tarefas</span>
+        </a>
+        <a href="cronograma.html" class="app-nav__link app-nav__link--active">
+            <span class="app-nav__icon">□</span>
+            <span class="app-nav__label">Cronograma</span>
+        </a>
+        <a href="../index.html#focus-section" class="app-nav__link">
+            <span class="app-nav__icon">◷</span>
+            <span class="app-nav__label">Foco</span>
+        </a>
+        <a href="../index.html#notes-section" class="app-nav__link">
+            <span class="app-nav__icon">✎</span>
+            <span class="app-nav__label">Notas</span>
+        </a>
+    </nav>
+
+    <main class="app-container" style="grid-template-columns: 1fr; margin-top: 1rem;">
+        <section class="kanban-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+                <h2 class="section-title" style="border: none; margin: 0;">📅 Cronograma Semanal</h2>
+                <div class="kanban-navigation" style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button id="prev-week" class="btn btn--info btn--small" title="Semana Anterior" style="padding: 0.3rem 0.7rem;">←</button>
+                    <button id="today-week" class="btn btn--primary btn--small" style="padding: 0.3rem 0.7rem; font-size: 0.8rem;">Hoje</button>
+                    <button id="next-week" class="btn btn--info btn--small" title="Próxima Semana" style="padding: 0.3rem 0.7rem;">→</button>
+                </div>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">Arraste as tarefas entre os dias para reprogramar suas atividades.</p>
+            <div id="kanban-board" class="kanban-board"></div>
+        </section>
+    </main>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>

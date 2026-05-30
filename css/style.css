@@ -9,12 +9,26 @@ html {
     scroll-behavior: smooth;
 }
 
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    --blur-amount: 10px;
+}
+
+.dark-theme {
+    --glass-bg: rgba(15, 23, 42, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.05);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
 body {
     font-family: 'Segoe UI', system-ui, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
     transition: var(--transition);
     line-height: 1.5;
+    padding-left: 220px;
 }
 
 /* Header */
@@ -60,6 +74,47 @@ body {
     opacity: 0.8;
 }
 
+.app-nav {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 20;
+    width: 220px;
+    padding: 1.5rem 1rem;
+    background: var(--surface-color);
+    border-right: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.app-nav__link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 44px;
+    padding: 0.7rem 0.85rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    font-size: 0.95rem;
+    font-weight: 650;
+    transition: var(--transition);
+}
+
+.app-nav__link:hover,
+.app-nav__link--active {
+    color: var(--primary-color);
+    background: var(--bg-color);
+}
+
+.app-nav__icon {
+    width: 1.25rem;
+    text-align: center;
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
 .header__toggle {
     background: none;
     border: 2px solid var(--border-color);
@@ -85,6 +140,36 @@ body {
     gap: 2rem;
 }
 
+/* Barra de Progresso Geral */
+.progress-container {
+    background-color: var(--surface-color);
+    padding: 1rem 1.5rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.progress-bar__label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+    color: var(--text-color);
+}
+
+.progress-bar {
+    background-color: var(--bg-color);
+    height: 10px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-bar__fill {
+    height: 100%;
+    background-color: var(--success-color);
+    width: 0%;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Dashboard Cards */
 .dashboard-summary {
     display: grid;
@@ -94,11 +179,14 @@ body {
 }
 
 .summary-card {
-    background-color: var(--surface-color);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--blur-amount));
+    -webkit-backdrop-filter: blur(var(--blur-amount));
     padding: 1rem;
     border-radius: var(--border-radius);
+    border: 1px solid var(--glass-border);
     border-left: 5px solid var(--border-color);
-    box-shadow: var(--shadow);
+    box-shadow: var(--glass-shadow);
 }
 
 .summary-card[data-type="total"] { border-left-color: var(--primary-color); }
@@ -122,11 +210,14 @@ body {
 
 /* Seções e Formulários */
 .main-content > section, .sidebar > section {
-    background-color: var(--surface-color);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--blur-amount));
+    -webkit-backdrop-filter: blur(var(--blur-amount));
     padding: 1.5rem;
     border-radius: var(--border-radius);
     margin-bottom: 2rem;
-    box-shadow: var(--shadow);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
 }
 
 .section-title {
@@ -209,6 +300,21 @@ body {
 .btn--danger { background-color: var(--danger-color); color: white; }
 .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
 
+/* Estilo específico para o botão de edição discreto */
+.btn-edit-ghost {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    transition: var(--transition);
+}
+.btn-edit-ghost:hover {
+    color: var(--info-color);
+}
+
 /* Filtros e Busca */
 .controls-section {
     display: flex;
@@ -216,6 +322,14 @@ body {
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.controls-section > div {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 .search-box__input {
@@ -233,6 +347,8 @@ body {
     color: var(--text-color);
     padding: 0.5rem 1rem;
     cursor: pointer;
+    min-height: 38px;
+    white-space: nowrap;
 }
 
 .btn-filter:first-child { border-radius: var(--border-radius) 0 0 var(--border-radius); }
@@ -250,6 +366,7 @@ body {
     justify-content: space-between;
     align-items: center;
     border-left: 4px solid var(--primary-color);
+    animation: slideIn 0.3s ease-out forwards;
 }
 .task-card--completed { opacity: 0.6; text-decoration: line-through; border-left-color: var(--success-color); }
 
@@ -263,10 +380,46 @@ body {
     gap: 0.5rem;
 }
 
+.task-actions > div {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
 .empty-state {
     color: var(--text-muted);
     text-align: center;
     padding: 1rem;
+}
+
+/* Circular Timer Styles */
+.timer-visual-container {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto;
+}
+
+.timer-ring__circle {
+    transition: stroke-dashoffset 0.35s;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+    stroke: var(--primary-color);
+}
+
+.timer-ring__background {
+    stroke: var(--border-color);
+}
+
+.timer-display-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.5rem;
+    font-weight: bold;
+    font-family: 'Courier New', Courier, monospace;
 }
 
 /* Timer Display */
@@ -276,6 +429,22 @@ body {
     text-align: center;
     margin: 1rem 0;
     font-family: monospace;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-pop {
+    animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes pop {
+    0% { transform: scale(0.95); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
 }
 .timer-controls { display: flex; gap: 0.5rem; justify-content: center; }
 
@@ -307,6 +476,39 @@ body {
    ========================================================================== */
 
 @media (max-width: 1024px) {
+    body {
+        padding-left: 0;
+        padding-bottom: 5.75rem;
+    }
+
+    .app-nav {
+        inset: auto 0 0 0;
+        width: 100%;
+        min-height: 72px;
+        padding: 0.45rem 0.6rem calc(0.45rem + env(safe-area-inset-bottom));
+        border-right: none;
+        border-top: 1px solid var(--border-color);
+        flex-direction: row;
+        justify-content: space-around;
+        gap: 0.25rem;
+    }
+
+    .app-nav__link {
+        flex: 1;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.2rem;
+        min-height: 58px;
+        padding: 0.35rem 0.25rem;
+        font-size: 0.72rem;
+        text-align: center;
+    }
+
+    .app-nav__icon {
+        width: auto;
+        font-size: 1rem;
+    }
+
     .app-container {
         grid-template-columns: 1fr;
     }
@@ -342,15 +544,59 @@ body {
         width: 100%;
     }
 
+    .controls-section > div {
+        width: 100%;
+        align-items: stretch;
+    }
+
+    .filter-group {
+        display: flex;
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 0.2rem;
+    }
+
+    .filter-group .btn-filter {
+        flex: 0 0 auto;
+    }
+
+    .kanban-board {
+        display: flex;
+        gap: 0.85rem;
+        min-height: 58vh;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .kanban-column {
+        flex: 0 0 min(82vw, 320px);
+        scroll-snap-align: start;
+    }
+
     .task-card {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
     }
 
-    .task-card div[style*="display: flex"] {
+    .task-card > div:first-child {
         width: 100%;
-        justify-content: space-between;
+        margin-right: 0 !important;
+    }
+
+    .task-actions {
+        width: 100%;
+        align-items: stretch !important;
+        align-self: auto !important;
+    }
+
+    .task-actions > div {
+        width: 100%;
+        justify-content: stretch !important;
+    }
+
+    .task-actions .btn {
+        flex: 1;
     }
 }
 
@@ -365,6 +611,23 @@ body {
 
     .timer-display {
         font-size: 2.5rem;
+    }
+
+    .header {
+        padding: 1.2rem 1rem;
+    }
+
+    .app-container {
+        padding: 0 0.75rem;
+    }
+
+    .main-content > section, .sidebar > section,
+    .progress-container {
+        padding: 1.1rem;
+    }
+
+    .app-nav__label {
+        font-size: 0.68rem;
     }
 }
 
@@ -417,4 +680,252 @@ body {
     white-space: pre-wrap;
     flex: 1;
     margin-right: 0.5rem;
+}
+
+.note-text--completed {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+/* Timer Presets & Enhancements */
+.btn-preset {
+    flex: 1;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-color);
+    color: var(--text-color);
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+}
+.btn-preset:hover {
+    background-color: var(--border-color);
+}
+.btn-preset--active {
+    background-color: var(--primary-color) !important;
+    color: #fff !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* Subtasks & Checklist Layout */
+.task-subtasks {
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
+    border-top: 1px dashed var(--border-color);
+    width: 100%;
+}
+
+.subtasks-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.subtasks-progress-bar {
+    flex: 1;
+    height: 6px;
+    background-color: var(--bg-color);
+    border-radius: 3px;
+    overflow: hidden;
+    max-width: 150px;
+}
+
+.subtasks-progress-fill {
+    height: 100%;
+    background-color: var(--success-color);
+    width: 0%;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.subtask-list {
+    list-style: none;
+    padding-left: 0.2rem;
+    margin-bottom: 0.6rem;
+}
+
+.subtask-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    padding: 0.2rem 0;
+    color: var(--text-color);
+}
+
+.subtask-item input[type="checkbox"] {
+    cursor: pointer;
+    width: 13px;
+    height: 13px;
+}
+
+.subtask-text--completed {
+    text-decoration: line-through;
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.action-subtask-delete {
+    background: none;
+    border: none;
+    color: var(--danger-color);
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0 0.2rem;
+    opacity: 0;
+    margin-left: auto;
+    transition: var(--transition);
+}
+
+.subtask-item:hover .action-subtask-delete {
+    opacity: 1;
+}
+
+.add-subtask-form {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+    width: 100%;
+    max-width: 320px;
+}
+
+.subtask-input {
+    flex: 1;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    outline: none;
+}
+
+/* Note to Task Action inside notes */
+.action-note-to-task {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+    transition: var(--transition);
+    border-radius: 4px;
+    padding: 0.1rem 0.2rem;
+}
+
+.action-note-to-task:hover {
+    background-color: var(--border-color);
+    transform: scale(1.1);
+}
+
+/* Streak and Gamification Badges */
+.streak-badge {
+    background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    cursor: default;
+    user-select: none;
+    animation: pulse-fire 2s infinite alternate;
+}
+
+@keyframes pulse-fire {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+    }
+    100% {
+        transform: scale(1.04);
+        box-shadow: 0 4px 10px rgba(255, 107, 107, 0.5);
+    }
+}
+
+.pomodoro-count {
+    background-color: var(--bg-color);
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    display: block;
+    margin: 0 auto 1.2rem auto !important;
+    text-align: center;
+    width: fit-content;
+}
+
+/* ==========================================================================
+   Estilos do Cronograma (Kanban Semanal)
+   ========================================================================== */
+
+.kanban-board {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1rem;
+    overflow-x: auto;
+    padding: 1rem 0;
+    min-height: 60vh;
+}
+
+.kanban-column {
+    display: flex;
+    flex-direction: column;
+    min-width: 160px;
+    flex: 1;
+    background: var(--surface-color);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.kanban-column h3 {
+    padding: 1rem 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-align: center;
+    background: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-color);
+}
+
+.kanban-dropzone {
+    flex: 1;
+    padding: 0.5rem;
+    background-color: transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    transition: background 0.2s;
+}
+
+.kanban-dropzone.dropzone-active {
+    background: rgba(66, 153, 225, 0.1);
+    outline: 2px dashed var(--primary-color);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+.kanban-card {
+    cursor: grab;
+    user-select: none;
+    transition: transform 0.1s;
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    /* Sobrescreve o estilo da lista principal para modo compacto */
+    padding: 0.75rem !important;
+    margin-bottom: 0.75rem !important;
+    flex-direction: column;
+    align-items: flex-start !important;
+}
+
+.kanban-card.dragging {
+    opacity: 0.4;
+    transform: scale(0.95);
 }

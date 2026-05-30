@@ -1,13 +1,66 @@
 /* js/main.js */
 
-import { getTasks, saveTasks, getNotes, saveNotes, getTheme, saveTheme } from './storage.js';
+import { getTasks, saveTasks, getNotes, saveNotes, getTheme, saveTheme, getStreak, saveStreak } from './storage.js';
 import { initTimer } from './timer.js';
-import { renderDashboard, renderTasks, renderNotes } from './ui.js';
+import { renderDashboard, renderTasks, renderNotes, setChartTab, renderWeeklyKanban } from './ui.js';
 
 let currentFilter = 'all';
 let currentSearchText = '';
 
+function checkStreakOnLoad() {
+    const streak = getStreak();
+    if (!streak.lastDate) return;
+    
+    const today = new Date();
+    const todayStr = today.toLocaleDateString('en-CA'); // Retorna YYYY-MM-DD local
+    
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toLocaleDateString('en-CA');
+    
+    if (streak.lastDate !== todayStr && streak.lastDate !== yesterdayStr) {
+        streak.count = 0;
+        saveStreak(streak);
+    }
+}
+
+function updateStreakOnCompletion(becomingCompleted) {
+    const streak = getStreak();
+    const todayStr = new Date().toLocaleDateString('en-CA');
+    
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toLocaleDateString('en-CA');
+    
+    if (becomingCompleted) {
+        if (streak.lastDate === todayStr) {
+            return;
+        } else if (streak.lastDate === yesterdayStr) {
+            streak.count++;
+            streak.lastDate = todayStr;
+        } else {
+            streak.count = 1;
+            streak.lastDate = todayStr;
+        }
+        saveStreak(streak);
+    } else {
+        const tasks = getTasks();
+        const anyOtherToday = tasks.some(t => t.completed && t.completedAt === todayStr);
+        
+        if (!anyOtherToday) {
+            if (streak.lastDate === todayStr) {
+                streak.count = Math.max(0, streak.count - 1);
+                streak.lastDate = streak.count > 0 ? yesterdayStr : null;
+                saveStreak(streak);
+            }
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Verificar Ofensiva (Streak) ao carregar
+    checkStreakOnLoad();
+
     // 1. Inicializar Tema
     const body = document.body;
     const themeToggleBtn = document.getElementById('theme-toggle');
@@ -17,12 +70,14 @@ document.addEventListener('DOMContentLoaded', () => {
         body.classList.add('dark-theme');
     }
 
-    themeToggleBtn.addEventListener('click', () => {
-        body.classList.toggle('dark-theme');
-        const standardTheme = body.classList.contains('dark-theme') ? 'dark' : 'light';
-        saveTheme(standardTheme);
-        renderDashboard(); // Atualiza cores do gráfico na hora
-    });
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            body.classList.toggle('dark-theme');
+            const standardTheme = body.classList.contains('dark-theme') ? 'dark' : 'light';
+            saveTheme(standardTheme);
+            renderDashboard(); 
+        });
+    }
 
     // 2. Inicializar Timer de Foco
     initTimer();
@@ -37,20 +92,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const taskTitleInput = document.getElementById('task-title');
     const errorTitleSpan = document.getElementById('error-title');
 
-    taskForm.addEventListener('submit', (e) => {
+    if (taskForm && taskTitleInput) {
+        taskForm.addEventListener('submit', (e) => {
         e.preventDefault();
         
         const title = taskTitleInput.value.trim();
-        const category = document.getElementById('task-category').value;
-        const priority = document.getElementById('task-priority').value;
-        const deadline = document.getElementById('task-deadline').value;
+        const category = document.getElementById('task-category')?.value || 'Geral';
+        const priority = document.getElementById('task-priority')?.value || 'baixa';
+        const deadline = document.getElementById('task-deadline')?.value || '';
 
         if (!title) {
-            errorTitleSpan.textContent = 'O título da tarefa não pode ficar vazio!';
+            if (errorTitleSpan) errorTitleSpan.textContent = 'O título da tarefa não pode ficar vazio!';
             taskTitleInput.style.borderColor = 'var(--danger-color)';
             return;
         } else {
-            errorTitleSpan.textContent = '';
+            if (errorTitleSpan) errorTitleSpan.textContent = '';
             taskTitleInput.style.borderColor = 'var(--border-color)';
         }
 
@@ -60,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
             category,
             priority,
             deadline,
+            focusTime: 0,
             inProgress: false,
             completed: false
         };
@@ -71,19 +128,89 @@ document.addEventListener('DOMContentLoaded', () => {
         taskForm.reset();
         renderDashboard();
         renderTasks(currentFilter, currentSearchText);
-    });
+        });
 
-    taskTitleInput.addEventListener('input', () => {
-        if (taskTitleInput.value.trim()) {
-            errorTitleSpan.textContent = '';
-            taskTitleInput.style.borderColor = 'var(--border-color)';
-        }
-    });
+        taskTitleInput.addEventListener('input', () => {
+            if (taskTitleInput.value.trim()) {
+                if (errorTitleSpan) errorTitleSpan.textContent = '';
+                taskTitleInput.style.borderColor = 'var(--border-color)';
+            }
+        });
+    }
 
-    // 5. Ações das Tarefas (Concluir e Excluir)
+    // Função auxiliar para adicionar sub-tarefa
+    function addSubtask(taskId, text) {
+        let tasks = getTasks();
+        tasks = tasks.map(task => {
+            if (task.id === taskId) {
+                const subtasks = task.subtasks || [];
+                return {
+                    ...task,
+                    subtasks: [...subtasks, { id: Date.now(), text, completed: false }]
+                };
+            }
+            return task;
+        });
+        saveTasks(tasks);
+        renderTasks(currentFilter, currentSearchText);
+    }
+
+    // 5. Ações das Tarefas (Concluir, Excluir e Gerenciamento de Sub-tarefas)
     const tasksList = document.getElementById('tasks-list');
     
     tasksList.addEventListener('click', (e) => {
+        // Ações de Sub-tarefas
+        if (e.target.classList.contains('action-subtask-toggle')) {
+            const taskId = parseInt(e.target.dataset.taskId, 10);
+            const subtaskId = parseInt(e.target.dataset.subtaskId, 10);
+            if (taskId && subtaskId) {
+                let tasks = getTasks();
+                tasks = tasks.map(task => {
+                    if (task.id === taskId) {
+                        const subtasks = (task.subtasks || []).map(sub => 
+                            sub.id === subtaskId ? { ...sub, completed: e.target.checked } : sub
+                        );
+                        return { ...task, subtasks };
+                    }
+                    return task;
+                });
+                saveTasks(tasks);
+                renderTasks(currentFilter, currentSearchText);
+            }
+            return;
+        }
+
+        if (e.target.classList.contains('action-subtask-delete')) {
+            const taskId = parseInt(e.target.dataset.taskId, 10);
+            const subtaskId = parseInt(e.target.dataset.subtaskId, 10);
+            if (taskId && subtaskId) {
+                let tasks = getTasks();
+                tasks = tasks.map(task => {
+                    if (task.id === taskId) {
+                        const subtasks = (task.subtasks || []).filter(sub => sub.id !== subtaskId);
+                        return { ...task, subtasks };
+                    }
+                    return task;
+                });
+                saveTasks(tasks);
+                renderTasks(currentFilter, currentSearchText);
+            }
+            return;
+        }
+
+        if (e.target.classList.contains('action-add-subtask')) {
+            const taskId = parseInt(e.target.dataset.taskId, 10);
+            if (taskId) {
+                const input = tasksList.querySelector(`.subtask-input[data-task-id="${taskId}"]`);
+                const text = input ? input.value.trim() : '';
+                if (text) {
+                    addSubtask(taskId, text);
+                }
+            }
+            return;
+        }
+
+        // Ações da Tarefa Principal (Iniciar, Concluir e Excluir)
         const id = parseInt(e.target.dataset.id, 10);
         if (!id) return;
 
@@ -99,9 +226,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (e.target.classList.contains('action-complete')) {
-            // Ao concluir, garantimos que inProgress também seja resetado
-            tasks = tasks.map(task => task.id === id ? { ...task, completed: !task.completed, inProgress: false } : task);
-            saveTasks(tasks);
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                const becomingCompleted = !task.completed;
+                const todayStr = new Date().toLocaleDateString('en-CA');
+                
+                tasks = tasks.map(t => 
+                    t.id === id 
+                        ? { ...t, completed: becomingCompleted, inProgress: false, completedAt: becomingCompleted ? todayStr : null } 
+                        : t
+                );
+                saveTasks(tasks);
+                
+                // Recalcular Ofensiva (Streak)
+                updateStreakOnCompletion(becomingCompleted);
+            }
             renderDashboard();
             renderTasks(currentFilter, currentSearchText);
         }
@@ -116,14 +255,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 6. Controles de Filtros e Busca
+    // Permite adicionar sub-tarefas ao apertar Enter dentro do input
+    tasksList.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.classList.contains('subtask-input')) {
+            e.preventDefault();
+            const taskId = parseInt(e.target.dataset.taskId, 10);
+            const text = e.target.value.trim();
+            if (text && taskId) {
+                addSubtask(taskId, text);
+            }
+        }
+    });
+
+    // 6. Controles de Filtros, Busca e Ordenação
     const searchInput = document.getElementById('search-input');
     const filterButtons = document.querySelectorAll('.btn-filter');
+    const sortSelect = document.getElementById('sort-select');
 
-    searchInput.addEventListener('input', (e) => {
-        currentSearchText = e.target.value;
-        renderTasks(currentFilter, currentSearchText);
-    });
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            currentSearchText = e.target.value;
+            renderTasks(currentFilter, currentSearchText);
+        });
+    }
 
     filterButtons.forEach(button => {
         button.addEventListener('click', (e) => {
@@ -135,30 +289,47 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 7. Seção de Anotações Rápidas (Cadastro e Remoção)
+    if (sortSelect) {
+        sortSelect.addEventListener('change', () => {
+            renderTasks(currentFilter, currentSearchText);
+        });
+    }
+
+    // Controles de abas de gráficos
+    const distBtn = document.getElementById('chart-toggle-dist');
+    const weeklyBtn = document.getElementById('chart-toggle-weekly');
+    if (distBtn && weeklyBtn) {
+        distBtn.addEventListener('click', () => setChartTab('distribution'));
+        weeklyBtn.addEventListener('click', () => setChartTab('weekly'));
+    }
+
+    // 7. Seção de Anotações Rápidas (Cadastro, Remoção e Conversão em Tarefa)
     const noteForm = document.getElementById('note-form');
     const noteTextInput = document.getElementById('note-text');
     const notesList = document.getElementById('notes-list');
 
-    noteForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const text = noteTextInput.value.trim();
-        if (!text) return;
+    if (noteForm && noteTextInput) {
+        noteForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = noteTextInput.value.trim();
+            if (!text) return;
 
-        const newNote = {
-            id: Date.now(),
-            text
-        };
+            const newNote = {
+                id: Date.now(),
+                text
+            };
 
-        const notes = getNotes();
-        notes.unshift(newNote);
-        saveNotes(notes);
+            const notes = getNotes();
+            notes.unshift(newNote);
+            saveNotes(notes);
 
-        noteForm.reset();
-        renderNotes();
-    });
+            noteForm.reset();
+            renderNotes();
+        });
+    }
 
-    notesList.addEventListener('click', (e) => {
+    if (notesList) {
+        notesList.addEventListener('click', (e) => {
         if (e.target.classList.contains('action-note-delete')) {
             const id = parseInt(e.target.dataset.id, 10);
             let notes = getNotes();
@@ -166,5 +337,76 @@ document.addEventListener('DOMContentLoaded', () => {
             saveNotes(notes);
             renderNotes();
         }
-    });
+
+        if (e.target.classList.contains('action-note-to-task')) {
+            const noteItem = e.target.closest('.note-item');
+            const noteText = noteItem ? noteItem.querySelector('.note-text').textContent : '';
+            
+            if (noteText) {
+                const taskTitleInput = document.getElementById('task-title');
+                if (taskTitleInput) {
+                    taskTitleInput.value = noteText;
+                    
+                    const addSection = document.getElementById('add-task-section');
+                    if (addSection) {
+                        addSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                    taskTitleInput.focus();
+                }
+            }
+        }
+        });
+    }
+
+    // 8. Inicialização do Kanban (Cronograma) e Lógica de Drag & Drop
+    const kanbanBoard = document.getElementById('kanban-board');
+    if (kanbanBoard) {
+        renderWeeklyKanban();
+
+        kanbanBoard.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('kanban-card')) {
+                e.dataTransfer.setData('task-id', e.target.dataset.id);
+                e.target.classList.add('dragging');
+            }
+        });
+
+        kanbanBoard.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('kanban-card')) {
+                e.target.classList.remove('dragging');
+            }
+        });
+
+        kanbanBoard.addEventListener('dragover', (e) => {
+            const dropzone = e.target.closest('.kanban-dropzone');
+            if (dropzone) {
+                e.preventDefault(); // Necessário para permitir o drop
+                dropzone.classList.add('dropzone-active');
+            }
+        });
+
+        kanbanBoard.addEventListener('dragleave', (e) => {
+            const dropzone = e.target.closest('.kanban-dropzone');
+            if (dropzone) {
+                dropzone.classList.remove('dropzone-active');
+            }
+        });
+
+        kanbanBoard.addEventListener('drop', (e) => {
+            const dropzone = e.target.closest('.kanban-dropzone');
+            if (dropzone) {
+                e.preventDefault();
+                dropzone.classList.remove('dropzone-active');
+                
+                const taskId = parseInt(e.dataTransfer.getData('task-id'), 10);
+                const newDate = dropzone.dataset.date;
+                
+                let tasks = getTasks();
+                tasks = tasks.map(t => t.id === taskId ? { ...t, deadline: newDate } : t);
+                saveTasks(tasks);
+                
+                // Feedback visual imediato
+                renderWeeklyKanban();
+            }
+        });
+    }
 });

@@ -14,21 +14,45 @@
     <header class="header">
         <div class="header__main-info">
             <h1 class="header__title">⚡ StudyFlow</h1>
-            <nav class="header__nav">
-                <ul class="nav-list">
-                    <li><a href="#add-task-section" class="nav-link">Nova Tarefa</a></li>
-                    <li><a href="#tasks-section" class="nav-link">Minhas Tarefas</a></li>
-                    <li><a href="#chart-section" class="nav-link">Resumo Tarefas</a></li>
-                </ul>
-            </nav>
+            <div id="user-streak" class="streak-badge" title="Dias seguidos de tarefas concluídas">🔥 0 dias</div>
         </div>
         <button id="theme-toggle" class="header__toggle">🌓 Alternar Tema</button>
     </header>
+
+    <nav class="app-nav" aria-label="Navegacao principal">
+        <a href="index.html" class="app-nav__link app-nav__link--active">
+            <span class="app-nav__icon">▦</span>
+            <span class="app-nav__label">Dashboard</span>
+        </a>
+        <a href="#tasks-section" class="app-nav__link">
+            <span class="app-nav__icon">✓</span>
+            <span class="app-nav__label">Tarefas</span>
+        </a>
+        <a href="js/cronograma.html" class="app-nav__link">
+            <span class="app-nav__icon">□</span>
+            <span class="app-nav__label">Cronograma</span>
+        </a>
+        <a href="#focus-section" class="app-nav__link">
+            <span class="app-nav__icon">◷</span>
+            <span class="app-nav__label">Foco</span>
+        </a>
+        <a href="#notes-section" class="app-nav__link">
+            <span class="app-nav__icon">✎</span>
+            <span class="app-nav__label">Notas</span>
+        </a>
+    </nav>
 
     <main class="app-container">
         
         <div class="main-content">
             
+            <div class="progress-container">
+                <div class="progress-bar__label">Conclusão Geral: <span id="progress-percentage">0%</span></div>
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-bar__fill" style="width: 0%;"></div>
+                </div>
+            </div>
+
             <section class="dashboard-summary">
                 <div class="summary-card" data-type="total">
                     <span class="summary-card__title">Total</span>
@@ -64,13 +88,14 @@
                     <div class="form__row">
                         <div class="form__group">
                             <label for="task-category" class="form__label">Categoria</label>
-                            <select id="task-category" class="form__input">
-                                <option value="Geral">Geral</option>
-                                <option value="Matemática">Matemática</option>
-                                <option value="Programação">Programação</option>
-                                <option value="História">História</option>
-                                <option value="Idiomas">Idiomas</option>
-                            </select>
+                            <input type="text" id="task-category" class="form__input" placeholder="Ex: Programação, Matemática" list="categories-datalist">
+                            <datalist id="categories-datalist">
+                                <option value="Geral">
+                                <option value="Matemática">
+                                <option value="Programação">
+                                <option value="História">
+                                <option value="Idiomas">
+                            </datalist>
                         </div>
                         <div class="form__group">
                             <label for="task-priority" class="form__label">Prioridade</label>
@@ -97,11 +122,21 @@
                 
                 <div class="controls-section">
                     <input type="text" id="search-input" class="search-box__input" placeholder="Buscar por título ou prioridade...">
-                    <div class="filter-group">
-                        <button class="btn-filter btn-filter--active" data-filter="all">Todas</button>
-                        <button class="btn-filter" data-filter="pending">Pendentes</button>
-                        <button class="btn-filter" data-filter="in-progress">Em Progresso</button>
-                        <button class="btn-filter" data-filter="completed">Concluídas</button>
+                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <div class="form__group" style="margin: 0; flex-direction: row; align-items: center; gap: 0.5rem;">
+                            <label for="sort-select" class="form__label" style="margin: 0; white-space: nowrap;">Ordenar por:</label>
+                            <select id="sort-select" class="form__input" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                                <option value="creation">Data de Criação</option>
+                                <option value="deadline">Prazo de Entrega</option>
+                                <option value="urgency">Urgência 🔥</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <button class="btn-filter btn-filter--active" data-filter="all">Todas</button>
+                            <button class="btn-filter" data-filter="pending">Pendentes</button>
+                            <button class="btn-filter" data-filter="in-progress">Em Progresso</button>
+                            <button class="btn-filter" data-filter="completed">Concluídas</button>
+                        </div>
                     </div>
                 </div>
 
@@ -110,7 +145,13 @@
             </section>
 
             <section id="chart-section" class="chart-section">
-                <h2 class="section-title">Resumo Tarefas</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1.2rem;">
+                    <h2 class="section-title" style="border: none; margin: 0; padding: 0;">Resumo Tarefas</h2>
+                    <div class="chart-toggles" style="display: flex; gap: 0.3rem;">
+                        <button id="chart-toggle-dist" class="btn-preset btn-preset--active" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Status</button>
+                        <button id="chart-toggle-weekly" class="btn-preset" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Semanal</button>
+                    </div>
+                </div>
                 <div class="chart-container">
                     <canvas id="performance-chart"></canvas>
                 </div>
@@ -119,15 +160,36 @@
 
         <aside class="sidebar">
             
-            <section class="timer-section">
-                <h2 class="section-title">⏱️ Timer de Foco</h2>
+            <section id="focus-section" class="timer-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1.2rem;">
+                    <h2 class="section-title" style="border: none; margin: 0; padding: 0;">⏱️ Timer de Foco</h2>
+                    <button id="timer-sound-toggle" class="header__toggle" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">🔊 Som</button>
+                </div>
+
+                <div class="timer-presets" style="display: flex; justify-content: space-between; gap: 0.4rem; margin-bottom: 1rem;">
+                    <button class="btn-preset btn-preset--active" data-duration="25:00" style="flex: 1; padding: 0.4rem; font-size: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); background: var(--bg-color); color: var(--text-color); cursor: pointer; font-weight: 600; transition: var(--transition);">Foco</button>
+                    <button class="btn-preset" data-duration="05:00" style="flex: 1; padding: 0.4rem; font-size: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); background: var(--bg-color); color: var(--text-color); cursor: pointer; font-weight: 600; transition: var(--transition);">Curta</button>
+                    <button class="btn-preset" data-duration="15:00" style="flex: 1; padding: 0.4rem; font-size: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); background: var(--bg-color); color: var(--text-color); cursor: pointer; font-weight: 600; transition: var(--transition);">Longa</button>
+                </div>
+
                 <div class="timer-display">
                     <span id="timer-minutes">25</span>:<span id="timer-seconds">00</span>
                 </div>
                 
-                <div class="timer-custom-group">
+                <div id="pomodoro-count" class="pomodoro-count" style="text-align: center; margin-bottom: 1rem; font-size: 0.9rem; font-weight: 600; color: var(--text-color);">
+                    🍅 Sessões hoje: 0
+                </div>
+                
+                <div class="timer-custom-group" style="margin-bottom: 1rem;">
                     <label for="timer-duration" class="form__label">Configurar Tempo (MM:SS):</label>
                     <input type="text" id="timer-duration" class="form__input timer-input-field" value="25:00" placeholder="Ex: 00:10 ou 25:00">
+                </div>
+
+                <div class="timer-task-group" style="display: flex; flex-direction: column; margin-bottom: 1rem; width: 100%;">
+                    <label for="timer-task-select" class="form__label">Vincular a uma tarefa:</label>
+                    <select id="timer-task-select" class="form__input" style="width: 100%;">
+                        <option value="">Nenhuma tarefa selecionada</option>
+                    </select>
                 </div>
 
                 <div class="timer-controls">
@@ -137,10 +199,16 @@
                 </div>
             </section>
 
-            <section class="notes-section">
+            <section id="notes-section" class="notes-section">
                 <h2 class="section-title">📝 Anotações Rápidas</h2>
                 <form id="note-form">
                     <textarea id="note-text" class="form__textarea" placeholder="Digite um insight ou lembrete rápido..."></textarea>
+                    <div class="form__group" style="margin-bottom: 1rem;">
+                        <label for="note-task-select" class="form__label">Vincular a uma tarefa (opcional):</label>
+                        <select id="note-task-select" class="form__input" style="width: 100%; font-size: 0.85rem; padding: 0.4rem;">
+                            <option value="">Nenhuma tarefa selecionada</option>
+                        </select>
+                    </div>
                     <button type="submit" class="btn btn--primary">Salvar Nota</button>
                 </form>
                 <div id="notes-list" style="margin-top: 1rem;">
