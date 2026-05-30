@@ -18,14 +18,16 @@ function sanitize(text) {
 export function renderDashboard() {
     const tasks = getTasks();
     const total = tasks.length;
+    const inProgress = tasks.filter(t => t.inProgress && !t.completed).length;
     const completed = tasks.filter(t => t.completed).length;
-    const pending = total - completed;
+    const pending = tasks.filter(t => !t.inProgress && !t.completed).length;
     
     const todayStr = new Date().toISOString().split('T')[0];
     const overdue = tasks.filter(t => !t.completed && t.deadline && t.deadline < todayStr).length;
 
     document.getElementById('count-total').textContent = total;
     document.getElementById('count-pending').textContent = pending;
+    document.getElementById('count-in-progress').textContent = inProgress;
     document.getElementById('count-completed').textContent = completed;
     document.getElementById('count-overdue').textContent = overdue;
 
@@ -38,15 +40,16 @@ export function renderDashboard() {
     }
 
     const temDados = total > 0;
-    const dadosGrafico = temDados ? [completed, pending, overdue] : [0, 0, 0, 1];
-    const labelsGrafico = temDados ? ['Concluídas', 'Pendentes', 'Atrasadas'] : ['Sem tarefas'];
-    const coresGrafico = temDados ? ['#48bb78', '#ecc94b', '#f56565'] : ['#e2e8f0'];
+    const dadosGrafico = temDados ? [completed, inProgress, pending, overdue] : [0, 0, 0, 0, 1];
+    const labelsGrafico = temDados ? ['Concluídas', 'Em Progresso', 'Pendentes', 'Atrasadas'] : ['Sem tarefas'];
+    const coresGrafico = temDados ? ['#48bb78', '#4299e1', '#ecc94b', '#f56565'] : ['#e2e8f0'];
 
     const isDarkMode = document.body.classList.contains('dark-theme');
     const labelColor = isDarkMode ? '#edf2f7' : '#2d3748';
 
     performanceChart = new Chart(ctx, {
         type: 'doughnut',
+        plugins: [ChartDataLabels],
         data: {
             labels: labelsGrafico,
             datasets: [{
@@ -59,6 +62,30 @@ export function renderDashboard() {
         options: {
             responsive: true,
             plugins: {
+                datalabels: {
+                    color: '#fff',
+                    font: {
+                        weight: 'bold',
+                        size: 14
+                    },
+                    formatter: (value) => {
+                        // Só mostra o número se houver dados e se o valor for maior que zero
+                        return (temDados && value > 0) ? value : null;
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            const label = context.label || '';
+                            const value = context.raw;
+                            if (!temDados) return label;
+
+                            const totalSum = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / totalSum) * 100).toFixed(1);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                },
                 legend: {
                     position: 'bottom',
                     labels: {
@@ -84,17 +111,19 @@ export function renderTasks(filter = 'all', searchText = '') {
         const matchesFilter = 
             filter === 'all' || 
             (filter === 'completed' && task.completed) || 
-            (filter === 'pending' && !task.completed);
+            (filter === 'in-progress' && task.inProgress && !task.completed) ||
+            (filter === 'pending' && !task.inProgress && !task.completed);
 
         const matchesSearch = 
             task.title.toLowerCase().includes(searchText.toLowerCase()) ||
+            task.category.toLowerCase().includes(searchText.toLowerCase()) ||
             task.priority.toLowerCase().includes(searchText.toLowerCase());
 
         return matchesFilter && matchesSearch;
     });
 
     if (filteredTasks.length === 0) {
-        tasksList.innerHTML = `<li style="color: var(--text-muted); text-align: center; padding: 1rem;">Nenhuma tarefa encontrada. 🙌</li>`;
+        tasksList.innerHTML = `<li class="empty-state">Nenhuma tarefa encontrada. 🙌</li>`;
         return;
     }
 
@@ -107,14 +136,27 @@ export function renderTasks(filter = 'all', searchText = '') {
         const priorityColors = { alta: 'var(--danger-color)', media: 'var(--warning-color)', baixa: 'var(--success-color)' };
         li.style.borderLeftColor = priorityColors[task.priority] || 'var(--primary-color)';
 
+        // Formata a prioridade para começar com Letra Maiúscula
+        const formattedPriority = task.priority.charAt(0).toUpperCase() + task.priority.slice(1);
+
+        // Formata a data de AAAA-MM-DD para DD-MM-AAAA
+        let formattedDeadline = 'Sem prazo';
+        if (task.deadline) {
+            const [year, month, day] = task.deadline.split('-');
+            formattedDeadline = `${day}-${month}-${year}`;
+        }
+
         li.innerHTML = `
             <div>
                 <strong>${sanitize(task.title)}</strong>
-                <div style="font-size: 0.8rem; color: var(--text-muted);">
-                    📁 ${task.category} | 📅 Prazo: ${task.deadline || 'Sem prazo'} | ⚠️ ${task.priority}
+                <div class="task-info__meta">
+                    📁 ${task.category} | 📅 Prazo: ${formattedDeadline} | ⚠️ ${formattedPriority}
                 </div>
             </div>
-            <div style="display: flex; gap: 0.5rem;">
+            <div class="task-actions">
+                <button class="btn ${task.inProgress ? 'btn--warning' : 'btn--info'} btn--small action-start" data-id="${task.id}" ${task.completed ? 'disabled' : ''}>
+                    ${task.inProgress ? 'Pausar' : 'Iniciar'}
+                </button>
                 <button class="btn btn--success btn--small action-complete" data-id="${task.id}">
                     ${task.completed ? 'Desfazer' : 'Concluir'}
                 </button>
@@ -144,11 +186,11 @@ export function renderNotes() {
 
     notes.forEach(note => {
         const div = document.createElement('div');
-        div.style.cssText = 'background: var(--bg-color); padding: 0.8rem; border-radius: var(--border-radius); margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: flex-start;';
+        div.className = 'note-item';
         
         div.innerHTML = `
-            <p style="font-size: 0.9rem; white-space: pre-wrap; flex: 1; margin-right: 0.5rem;">${sanitize(note.text)}</p>
-            <button class="action-note-delete" data-id="${note.id}" style="background: none; border: none; color: var(--danger-color); cursor: pointer; font-weight: bold;">×</button>
+            <p class="note-text">${sanitize(note.text)}</p>
+            <button class="action-note-delete" data-id="${note.id}">×</button>
         `;
 
         notesContainer.appendChild(div);

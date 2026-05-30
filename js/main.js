@@ -60,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
             category,
             priority,
             deadline,
+            inProgress: false,
             completed: false
         };
 
@@ -88,8 +89,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let tasks = getTasks();
 
+        if (e.target.classList.contains('action-start')) {
+            tasks = tasks.map(task => 
+                task.id === id ? { ...task, inProgress: !task.inProgress } : task
+            );
+            saveTasks(tasks);
+            renderDashboard();
+            renderTasks(currentFilter, currentSearchText);
+        }
+
         if (e.target.classList.contains('action-complete')) {
-            tasks = tasks.map(task => task.id === id ? { ...task, completed: !task.completed } : task);
+            // Ao concluir, garantimos que inProgress também seja resetado
+            tasks = tasks.map(task => task.id === id ? { ...task, completed: !task.completed, inProgress: false } : task);
             saveTasks(tasks);
             renderDashboard();
             renderTasks(currentFilter, currentSearchText);

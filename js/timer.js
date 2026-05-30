@@ -13,6 +13,10 @@ function playBeep() {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
 
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
 
@@ -46,7 +50,6 @@ export function initTimer() {
     if (!messageEl) {
         messageEl = document.createElement('div');
         messageEl.className = 'timer-message';
-        messageEl.style.cssText = 'color: var(--danger-color); font-weight: bold; text-align: center; margin-top: 1rem; min-height: 24px; transition: var(--transition);';
         timerSection.appendChild(messageEl);
     }
 
