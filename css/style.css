@@ -1,0 +1,264 @@
+/* css/style.css */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: var(--transition);
+    line-height: 1.5;
+}
+
+/* Header */
+.header {
+    background-color: var(--surface-color);
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.header__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.header__toggle {
+    background: none;
+    border: 2px solid var(--border-color);
+    color: var(--text-color);
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.header__toggle:hover {
+    background-color: var(--border-color);
+}
+
+/* Layout Principal */
+.app-container {
+    max-width: 1400px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 2rem;
+}
+
+/* Dashboard Cards */
+.dashboard-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.summary-card {
+    background-color: var(--surface-color);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    border-left: 5px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.summary-card[data-type="total"] { border-left-color: var(--primary-color); }
+.summary-card[data-type="pending"] { border-left-color: var(--warning-color); }
+.summary-card[data-type="completed"] { border-left-color: var(--success-color); }
+.summary-card[data-type="overdue"] { border-left-color: var(--danger-color); }
+
+.summary-card__title {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.summary-card__value {
+    font-size: 2rem;
+    font-weight: bold;
+    display: block;
+    margin-top: 0.5rem;
+}
+
+/* Seções e Formulários */
+.main-content > section, .sidebar > section {
+    background-color: var(--surface-color);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+}
+
+.section-title {
+    font-size: 1.2rem;
+    margin-bottom: 1.2rem;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+
+.chart-container {
+    display: flex;
+    justify-content: center;
+}
+
+.chart-container canvas {
+    max-width: 300px;
+    max-height: 300px;
+}
+
+.form__group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+.form__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.form__label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+}
+
+.form__input, .form__textarea {
+    padding: 0.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    outline: none;
+}
+
+.form__textarea {
+    resize: vertical;
+    min-height: 80px;
+    margin-bottom: 1rem;
+}
+
+.form__error {
+    color: var(--danger-color);
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
+    height: 15px;
+}
+
+/* Botões */
+.btn {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+}
+.btn--primary { background-color: var(--primary-color); color: white; }
+.btn--primary:hover { background-color: var(--primary-hover); }
+.btn--success { background-color: var(--success-color); color: white; }
+.btn--warning { background-color: var(--warning-color); color: black; }
+.btn--danger { background-color: var(--danger-color); color: white; }
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+/* Filtros e Busca */
+.controls-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.search-box__input {
+    padding: 0.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    width: 250px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.btn-filter {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+}
+
+.btn-filter:first-child { border-radius: var(--border-radius) 0 0 var(--border-radius); }
+.btn-filter:last-child { border-radius: 0 var(--border-radius) var(--border-radius) 0; }
+.btn-filter--active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+
+/* Cards de Tarefas Dinâmicas (Mapeado para o JS posterior) */
+.tasks-list { list-style: none; }
+.task-card {
+    background-color: var(--bg-color);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 4px solid var(--primary-color);
+}
+.task-card--completed { opacity: 0.6; text-decoration: line-through; border-left-color: var(--success-color); }
+
+/* Timer Display */
+.timer-display {
+    font-size: 3rem;
+    font-weight: bold;
+    text-align: center;
+    margin: 1rem 0;
+    font-family: monospace;
+}
+.timer-controls { display: flex; gap: 0.5rem; justify-content: center; }
+
+/* Responsividade */
+@media (max-width: 900px) {
+    .app-container {
+        grid-template-columns: 1fr;
+    }
+}
+/* ==========================================================================
+   Ajustes de Espaçamento e Respiro (Fine-Tuning)
+   ========================================================================== */
+
+/* Dá o respiro que faltava entre o input de minutos e os botões do timer */
+.timer-controls {
+    margin-top: 1.5rem; 
+}
+
+/* Faz a caixa de texto de anotações ocupar 100% da largura disponível para a direita */
+.form__textarea {
+    width: 100%;
+    min-height: 100px; /* Aumenta um pouco a altura inicial para dar mais área de escrita */
+    margin-bottom: 1.2rem;
+}
+
+/* Garante que o botão de Salvar Nota e a frase de feedback abaixo tenham um espaçamento confortável */
+#note-form {
+    margin-bottom: 1.5rem;
+}
+
+/* Alinha o botão "Salvar Nota" perfeitamente à direita para harmonizar o visual */
+#note-form .btn {
+    display: block;
+    margin-left: auto;
+}
+
+/* Dá o devido distanciamento e destaque para a mensagem "Nenhum insight por aqui ainda" */
+#notes-list p {
+    margin-top: 1.5rem;
+    padding: 1rem 0;
+}

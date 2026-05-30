@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyFlow Dashboard</title>
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <header class="header">
+        <h1 class="header__title">⚡ StudyFlow</h1>
+        <button id="theme-toggle" class="header__toggle">🌓 Alternar Tema</button>
+    </header>
+
+    <main class="app-container">
+        
+        <div class="main-content">
+            
+            <section class="dashboard-summary">
+                <div class="summary-card" data-type="total">
+                    <span class="summary-card__title">Total</span>
+                    <span class="summary-card__value" id="count-total">0</span>
+                </div>
+                <div class="summary-card" data-type="pending">
+                    <span class="summary-card__title">Pendentes</span>
+                    <span class="summary-card__value" id="count-pending">0</span>
+                </div>
+                <div class="summary-card" data-type="completed">
+                    <span class="summary-card__title">Concluídas</span>
+                    <span class="summary-card__value" id="count-completed">0</span>
+                </div>
+                <div class="summary-card" data-type="overdue">
+                    <span class="summary-card__title">Atrasadas</span>
+                    <span class="summary-card__value" id="count-overdue">0</span>
+                </div>
+            </section>
+
+            <section class="add-task-section" style="background: var(--surface-color); padding: 1.5rem; border-radius: var(--border-radius); margin-bottom: 2rem; box-shadow: var(--shadow);">
+                <h2 class="section-title">Nova Tarefa</h2>
+                <form id="task-form" class="form">
+                    <div class="form__group">
+                        <label for="task-title" class="form__label">Título da Tarefa</label>
+                        <input type="text" id="task-title" class="form__input" placeholder="Ex: Estudar Álgebra Linear">
+                        <span id="error-title" class="form__error"></span>
+                    </div>
+
+                    <div class="form__row">
+                        <div class="form__group">
+                            <label for="task-category" class="form__label">Matéria/Categoria</label>
+                            <select id="task-category" class="form__input">
+                                <option value="Geral">Geral</option>
+                                <option value="Matemática">Matemática</option>
+                                <option value="Programação">Programação</option>
+                                <option value="História">História</option>
+                                <option value="Idiomas">Idiomas</option>
+                            </select>
+                        </div>
+                        <div class="form__group">
+                            <label for="task-priority" class="form__label">Prioridade</label>
+                            <select id="task-priority" class="form__input">
+                                <option value="baixa">Baixa</option>
+                                <option value="media" selected>Média</option>
+                                <option value="alta">Alta</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form__group">
+                        <label for="task-deadline" class="form__label">Prazo de Entrega</label>
+                        <input type="date" id="task-deadline" class="form__input">
+                    </div>
+
+                    <button type="submit" class="btn btn--primary" style="width: 100%; margin-top: 0.5rem;">Adicionar Tarefa</button>
+                </form>
+            </section>
+
+            <section class="tasks-section">
+                <h2 class="section-title">Minhas Tarefas</h2>
+                
+                <div class="controls-section" style="margin-bottom: 1.5rem;">
+                    <input type="text" id="search-input" class="search-box__input" placeholder="Buscar por título ou prioridade...">
+                    <div class="filter-group">
+                        <button class="btn-filter btn-filter--active" data-filter="all">Todas</button>
+                        <button class="btn-filter" data-filter="pending">Pendentes</button>
+                        <button class="btn-filter" data-filter="completed">Concluídas</button>
+                    </div>
+                </div>
+
+                <ul id="tasks-list" class="tasks-list">
+                    </ul>
+            </section>
+
+            <section class="chart-section">
+                <h2 class="section-title">Resumo Tarefas</h2>
+                <div class="chart-container">
+                    <canvas id="performance-chart"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <aside class="sidebar">
+            
+            <section class="timer-section">
+                <h2 class="section-title">⏱️ Timer de Foco</h2>
+                <div class="timer-display">
+                    <span id="timer-minutes">25</span>:<span id="timer-seconds">00</span>
+                </div>
+                
+                <div class="timer-custom" style="display: flex; flex-direction: column; align-items: center; gap: 0.3rem;">
+                    <label for="timer-duration" class="form__label">Configurar Tempo (MM:SS):</label>
+                    <input type="text" id="timer-duration" class="form__input" value="25:00" placeholder="Ex: 00:10 ou 25:00" style="text-align: center; width: 120px; font-weight: bold;">
+                </div>
+
+                <div class="timer-controls">
+                    <button id="timer-start" class="btn btn--success">Iniciar</button>
+                    <button id="timer-pause" class="btn btn--warning" disabled>Pausar</button>
+                    <button id="timer-reset" class="btn btn--danger">Reiniciar</button>
+                </div>
+            </section>
+
+            <section class="notes-section">
+                <h2 class="section-title">📝 Anotações Rápidas</h2>
+                <form id="note-form">
+                    <textarea id="note-text" class="form__textarea" placeholder="Digite um insight ou lembrete rápido..."></textarea>
+                    <button type="submit" class="btn btn--primary">Salvar Nota</button>
+                </form>
+                <div id="notes-list" style="margin-top: 1rem;">
+                    </div>
+            </section>
+
+        </aside>
+    </main>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+/* css/theme.css */
+:root {
+    /* Tema Claro (Padrão) */
+    --bg-color: #f5f7fb;
+    --surface-color: #ffffff;
+    --text-color: #2d3748;
+    --text-muted: #718096;
+    --border-color: #e2e8f0;
+    
+    --primary-color: #4c51bf;
+    --primary-hover: #434190;
+    --success-color: #48bb78;
+    --warning-color: #ecc94b;
+    --danger-color: #f56565;
+    
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --border-radius: 10px;
+    --transition: all 0.3s ease;
+}
+
+body.dark-theme {
+    /* Tema Escuro */
+    --bg-color: #1a202c;
+    --surface-color: #2d3748;
+    --text-color: #edf2f7;
+    --text-muted: #a0aec0;
+    --border-color: #4a5568;
+    
+    --primary-color: #667eea;
+    --primary-hover: #5a67d8;
+    
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
